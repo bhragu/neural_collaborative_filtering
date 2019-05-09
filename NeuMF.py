@@ -25,40 +25,40 @@ import GMF, MLP
 import argparse
 
 #################### Arguments ####################
-#def parse_args():
-#    parser = argparse.ArgumentParser(description="Run NeuMF.")
-#    parser.add_argument('--path', nargs='?', default='Data/',
-#                        help='Input data path.')
-#    parser.add_argument('--dataset', nargs='?', default='ml-1m',
-#                        help='Choose a dataset.')
-#    parser.add_argument('--epochs', type=int, default=100,
-#                        help='Number of epochs.')
-#    parser.add_argument('--batch_size', type=int, default=256,
-#                        help='Batch size.')
-#    parser.add_argument('--num_factors', type=int, default=8,
-#                        help='Embedding size of MF model.')
-#    parser.add_argument('--layers', nargs='?', default='[64,32,16,8]',
-#                        help="MLP layers. Note that the first layer is the concatenation of user and item embeddings. So layers[0]/2 is the embedding size.")
-#    parser.add_argument('--reg_mf', type=float, default=0,
-#                        help='Regularization for MF embeddings.')                    
-#    parser.add_argument('--reg_layers', nargs='?', default='[0,0,0,0]',
-#                        help="Regularization for each MLP layer. reg_layers[0] is the regularization for embeddings.")
-#    parser.add_argument('--num_neg', type=int, default=4,
-#                        help='Number of negative instances to pair with a positive instance.')
-#    parser.add_argument('--lr', type=float, default=0.001,
-#                        help='Learning rate.')
-#    parser.add_argument('--learner', nargs='?', default='adam',
-#                        help='Specify an optimizer: adagrad, adam, rmsprop, sgd')
-#    parser.add_argument('--verbose', type=int, default=1,
-#                        help='Show performance per X iterations')
-#    parser.add_argument('--out', type=int, default=1,
-#                        help='Whether to save the trained model.')
-#    parser.add_argument('--mf_pretrain', nargs='?', default='',
-#                        help='Specify the pretrain model file for MF part. If empty, no pretrain will be used')
-#    parser.add_argument('--mlp_pretrain', nargs='?', default='',
-#                        help='Specify the pretrain model file for MLP part. If empty, no pretrain will be used')
-#    return parser.parse_args()
-#
+def parse_args():
+    parser = argparse.ArgumentParser(description="Run NeuMF.")
+    parser.add_argument('--path', nargs='?', default='Data/',
+                        help='Input data path.')
+    parser.add_argument('--dataset', nargs='?', default='ml-1m',
+                        help='Choose a dataset.')
+    parser.add_argument('--epochs', type=int, default=100,
+                        help='Number of epochs.')
+    parser.add_argument('--batch_size', type=int, default=256,
+                        help='Batch size.')
+    parser.add_argument('--num_factors', type=int, default=8,
+                        help='Embedding size of MF model.')
+    parser.add_argument('--layers', nargs='?', default='[64,32,16,8]',
+                        help="MLP layers. Note that the first layer is the concatenation of user and item embeddings. So layers[0]/2 is the embedding size.")
+    parser.add_argument('--reg_mf', type=float, default=0,
+                        help='Regularization for MF embeddings.')                    
+    parser.add_argument('--reg_layers', nargs='?', default='[0,0,0,0]',
+                        help="Regularization for each MLP layer. reg_layers[0] is the regularization for embeddings.")
+    parser.add_argument('--num_neg', type=int, default=4,
+                        help='Number of negative instances to pair with a positive instance.')
+    parser.add_argument('--lr', type=float, default=0.001,
+                        help='Learning rate.')
+    parser.add_argument('--learner', nargs='?', default='adam',
+                        help='Specify an optimizer: adagrad, adam, rmsprop, sgd')
+    parser.add_argument('--verbose', type=int, default=1,
+                        help='Show performance per X iterations')
+    parser.add_argument('--out', type=int, default=1,
+                        help='Whether to save the trained model.')
+    parser.add_argument('--mf_pretrain', nargs='?', default='',
+                        help='Specify the pretrain model file for MF part. If empty, no pretrain will be used')
+    parser.add_argument('--mlp_pretrain', nargs='?', default='',
+                        help='Specify the pretrain model file for MLP part. If empty, no pretrain will be used')
+    return parser.parse_args()
+
 #def init_normal(shape, name=None):
 #    return  initializers.normal(shape, name=name)
 
@@ -150,19 +150,7 @@ def get_train_instances(train, num_negatives):
             item_input.append(j)
             labels.append(0)
     return user_input, item_input, labels
-#%%
-#faltu ka code
-#train ke nature dekhne ke liye  
-c = 0
-for (u,i) in train.keys():
-    print (u)
-    print(i)
-    c=c+1
-    if c>5:
-        break
-j=5
-for (u,j) in train.keys():
-    print (5)
+
 #%%
 if __name__ == '__main__':
     args = parse_args()
@@ -203,7 +191,7 @@ if __name__ == '__main__':
 
     # Loading data
     t1 = time()
-    dataset = Dataset(path + dataset)
+    dataset = Dataset(args.path + args.dataset)
     train, testRatings, testNegatives = dataset.trainMatrix, dataset.testRatings, dataset.testNegatives
     num_users, num_items = train.shape
     print("Load data done [%.1f s]. #user=%d, #item=%d, #train=%d, #test=%d" 
