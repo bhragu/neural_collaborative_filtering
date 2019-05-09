@@ -7,15 +7,15 @@ He Xiangnan et al. Neural Collaborative Filtering. In WWW 2017.
 '''
 import numpy as np
 
-import theano
-import theano.tensor as T
+#import theano
+#import theano.tensor as T
 import keras
 from keras import backend as K
-from keras import initializations
-from keras.regularizers import l1, l2, l1l2
+from keras import initializers
+from keras.regularizers import l1, l2
 from keras.models import Sequential, Model
 from keras.layers.core import Dense, Lambda, Activation
-from keras.layers import Embedding, Input, Dense, merge, Reshape, Merge, Flatten, Dropout
+from keras.layers import Embedding, Input, Dense, Reshape, Flatten, Dropout
 from keras.optimizers import Adagrad, Adam, SGD, RMSprop
 from evaluate import evaluate_model
 from Dataset import Dataset
@@ -25,78 +25,78 @@ import GMF, MLP
 import argparse
 
 #################### Arguments ####################
-def parse_args():
-    parser = argparse.ArgumentParser(description="Run NeuMF.")
-    parser.add_argument('--path', nargs='?', default='Data/',
-                        help='Input data path.')
-    parser.add_argument('--dataset', nargs='?', default='ml-1m',
-                        help='Choose a dataset.')
-    parser.add_argument('--epochs', type=int, default=100,
-                        help='Number of epochs.')
-    parser.add_argument('--batch_size', type=int, default=256,
-                        help='Batch size.')
-    parser.add_argument('--num_factors', type=int, default=8,
-                        help='Embedding size of MF model.')
-    parser.add_argument('--layers', nargs='?', default='[64,32,16,8]',
-                        help="MLP layers. Note that the first layer is the concatenation of user and item embeddings. So layers[0]/2 is the embedding size.")
-    parser.add_argument('--reg_mf', type=float, default=0,
-                        help='Regularization for MF embeddings.')                    
-    parser.add_argument('--reg_layers', nargs='?', default='[0,0,0,0]',
-                        help="Regularization for each MLP layer. reg_layers[0] is the regularization for embeddings.")
-    parser.add_argument('--num_neg', type=int, default=4,
-                        help='Number of negative instances to pair with a positive instance.')
-    parser.add_argument('--lr', type=float, default=0.001,
-                        help='Learning rate.')
-    parser.add_argument('--learner', nargs='?', default='adam',
-                        help='Specify an optimizer: adagrad, adam, rmsprop, sgd')
-    parser.add_argument('--verbose', type=int, default=1,
-                        help='Show performance per X iterations')
-    parser.add_argument('--out', type=int, default=1,
-                        help='Whether to save the trained model.')
-    parser.add_argument('--mf_pretrain', nargs='?', default='',
-                        help='Specify the pretrain model file for MF part. If empty, no pretrain will be used')
-    parser.add_argument('--mlp_pretrain', nargs='?', default='',
-                        help='Specify the pretrain model file for MLP part. If empty, no pretrain will be used')
-    return parser.parse_args()
-
-def init_normal(shape, name=None):
-    return initializations.normal(shape, scale=0.01, name=name)
+#def parse_args():
+#    parser = argparse.ArgumentParser(description="Run NeuMF.")
+#    parser.add_argument('--path', nargs='?', default='Data/',
+#                        help='Input data path.')
+#    parser.add_argument('--dataset', nargs='?', default='ml-1m',
+#                        help='Choose a dataset.')
+#    parser.add_argument('--epochs', type=int, default=100,
+#                        help='Number of epochs.')
+#    parser.add_argument('--batch_size', type=int, default=256,
+#                        help='Batch size.')
+#    parser.add_argument('--num_factors', type=int, default=8,
+#                        help='Embedding size of MF model.')
+#    parser.add_argument('--layers', nargs='?', default='[64,32,16,8]',
+#                        help="MLP layers. Note that the first layer is the concatenation of user and item embeddings. So layers[0]/2 is the embedding size.")
+#    parser.add_argument('--reg_mf', type=float, default=0,
+#                        help='Regularization for MF embeddings.')                    
+#    parser.add_argument('--reg_layers', nargs='?', default='[0,0,0,0]',
+#                        help="Regularization for each MLP layer. reg_layers[0] is the regularization for embeddings.")
+#    parser.add_argument('--num_neg', type=int, default=4,
+#                        help='Number of negative instances to pair with a positive instance.')
+#    parser.add_argument('--lr', type=float, default=0.001,
+#                        help='Learning rate.')
+#    parser.add_argument('--learner', nargs='?', default='adam',
+#                        help='Specify an optimizer: adagrad, adam, rmsprop, sgd')
+#    parser.add_argument('--verbose', type=int, default=1,
+#                        help='Show performance per X iterations')
+#    parser.add_argument('--out', type=int, default=1,
+#                        help='Whether to save the trained model.')
+#    parser.add_argument('--mf_pretrain', nargs='?', default='',
+#                        help='Specify the pretrain model file for MF part. If empty, no pretrain will be used')
+#    parser.add_argument('--mlp_pretrain', nargs='?', default='',
+#                        help='Specify the pretrain model file for MLP part. If empty, no pretrain will be used')
+#    return parser.parse_args()
+#
+#def init_normal(shape, name=None):
+#    return  initializers.normal(shape, name=name)
 
 def get_model(num_users, num_items, mf_dim=10, layers=[10], reg_layers=[0], reg_mf=0):
     assert len(layers) == len(reg_layers)
     num_layer = len(layers) #Number of layers in the MLP
     # Input variables
-    user_input = Input(shape=(1,), dtype='int32', name = 'user_input')
-    item_input = Input(shape=(1,), dtype='int32', name = 'item_input')
+    user_input = Input(shape=(1,), dtype='int32')
+    item_input = Input(shape=(1,), dtype='int32')
     
     # Embedding layer
     MF_Embedding_User = Embedding(input_dim = num_users, output_dim = mf_dim, name = 'mf_embedding_user',
-                                  init = init_normal, W_regularizer = l2(reg_mf), input_length=1)
+                                 embeddings_initializer='uniform', embeddings_regularizer  = l2(reg_mf), input_length=1)
     MF_Embedding_Item = Embedding(input_dim = num_items, output_dim = mf_dim, name = 'mf_embedding_item',
-                                  init = init_normal, W_regularizer = l2(reg_mf), input_length=1)   
+                                  embeddings_initializer='uniform', embeddings_regularizer =  l2(reg_mf), input_length=1)   
 
     MLP_Embedding_User = Embedding(input_dim = num_users, output_dim = layers[0]/2, name = "mlp_embedding_user",
-                                  init = init_normal, W_regularizer = l2(reg_layers[0]), input_length=1)
+                                  embeddings_regularizer =  l2(reg_layers[0]), input_length=1)
     MLP_Embedding_Item = Embedding(input_dim = num_items, output_dim = layers[0]/2, name = 'mlp_embedding_item',
-                                  init = init_normal, W_regularizer = l2(reg_layers[0]), input_length=1)   
+                                 embeddings_initializer='uniform', embeddings_regularizer =  l2(reg_layers[0]), input_length=1)   
     
     # MF part
     mf_user_latent = Flatten()(MF_Embedding_User(user_input))
     mf_item_latent = Flatten()(MF_Embedding_Item(item_input))
-    mf_vector = merge([mf_user_latent, mf_item_latent], mode = 'mul') # element-wise multiply
+    mf_vector = keras.layers.multiply([mf_user_latent, mf_item_latent])# original code followed changes made because of library merge([mf_user_latent, mf_item_latent], mode = 'mul') # element-wise multiply
 
     # MLP part 
     mlp_user_latent = Flatten()(MLP_Embedding_User(user_input))
     mlp_item_latent = Flatten()(MLP_Embedding_Item(item_input))
-    mlp_vector = merge([mlp_user_latent, mlp_item_latent], mode = 'concat')
-    for idx in xrange(1, num_layer):
+    mlp_vector = keras.layers.concatenate([mlp_user_latent, mlp_item_latent])
+    for idx in range(1, num_layer):
         layer = Dense(layers[idx], W_regularizer= l2(reg_layers[idx]), activation='relu', name="layer%d" %idx)
         mlp_vector = layer(mlp_vector)
 
     # Concatenate MF and MLP parts
     #mf_vector = Lambda(lambda x: x * alpha)(mf_vector)
     #mlp_vector = Lambda(lambda x : x * (1-alpha))(mlp_vector)
-    predict_vector = merge([mf_vector, mlp_vector], mode = 'concat')
+    predict_vector = keras.layers.concatenate([mf_vector, mlp_vector])
     
     # Final prediction layer
     prediction = Dense(1, activation='sigmoid', init='lecun_uniform', name = "prediction")(predict_vector)
@@ -120,7 +120,7 @@ def load_pretrain_model(model, gmf_model, mlp_model, num_layers):
     model.get_layer('mlp_embedding_item').set_weights(mlp_item_embeddings)
     
     # MLP layers
-    for i in xrange(1, num_layers):
+    for i in range(1, num_layers):
         mlp_layer_weights = mlp_model.get_layer('layer%d' %i).get_weights()
         model.get_layer('layer%d' %i).set_weights(mlp_layer_weights)
         
@@ -141,15 +141,29 @@ def get_train_instances(train, num_negatives):
         item_input.append(i)
         labels.append(1)
         # negative instances
-        for t in xrange(num_negatives):
-            j = np.random.randint(num_items)
-            while train.has_key((u, j)):
-                j = np.random.randint(num_items)
+        for t in range(num_negatives):
+            j = np.random.randint(num_items)              
+#            while train.has_key((u, j)):  This loop has been replaced because of python 3 has changed has_key
+            for (u,j) in train.keys():
+                j = np.random.randint(num_items) 
             user_input.append(u)
             item_input.append(j)
             labels.append(0)
     return user_input, item_input, labels
-
+#%%
+#faltu ka code
+#train ke nature dekhne ke liye  
+c = 0
+for (u,i) in train.keys():
+    print (u)
+    print(i)
+    c=c+1
+    if c>5:
+        break
+j=5
+for (u,j) in train.keys():
+    print (5)
+#%%
 if __name__ == '__main__':
     args = parse_args()
     num_epochs = args.epochs
@@ -164,6 +178,23 @@ if __name__ == '__main__':
     verbose = args.verbose
     mf_pretrain = args.mf_pretrain
     mlp_pretrain = args.mlp_pretrain
+    
+##    args = parse_args()
+#    num_epochs = 10
+#    batch_size = 64
+#    mf_dim = 8
+#    layers = eval('[64,32,16,8]')
+#    reg_mf = 0
+#    reg_layers = eval('[0,0,0,0]')
+#    num_negatives = 4
+#    learning_rate = .01
+#    learner = 'adam'
+#    verbose = 1
+#    mf_pretrain = ''
+#    mlp_pretrain = ''
+#    path = 'J:\\RA\\neural_collaborative_filtering-master\\'
+#    dataset = 'Data\\ml-1m'
+#    
             
     topK = 10
     evaluation_threads = 1#mp.cpu_count()
@@ -172,7 +203,7 @@ if __name__ == '__main__':
 
     # Loading data
     t1 = time()
-    dataset = Dataset(args.path + args.dataset)
+    dataset = Dataset(path + dataset)
     train, testRatings, testNegatives = dataset.trainMatrix, dataset.testRatings, dataset.testNegatives
     num_users, num_items = train.shape
     print("Load data done [%.1f s]. #user=%d, #item=%d, #train=%d, #test=%d" 
@@ -207,7 +238,7 @@ if __name__ == '__main__':
         model.save_weights(model_out_file, overwrite=True) 
         
     # Training model
-    for epoch in xrange(num_epochs):
+    for epoch in range(num_epochs):
         t1 = time()
         # Generate training instances
         user_input, item_input, labels = get_train_instances(train, num_negatives)
